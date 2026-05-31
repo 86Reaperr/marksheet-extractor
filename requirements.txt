@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+google-genai
+pydantic
+pydantic-settings
+python-multipart
+python-jose[cryptography]
+pymupdf
+pillow
+python-dotenv
