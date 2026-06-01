@@ -62,6 +62,7 @@ def get_extraction_prompt():
     - If a field is missing:
       {"value": null, "confidence": 0.0}
     - Never assign confidence above 0.2 when value is null.
+    - Do not invent values.
     - Return JSON only.
     """
     
@@ -78,7 +79,7 @@ def extract_marksheet_from_image(image_bytes):
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=[
                 get_extraction_prompt(),
                 image
