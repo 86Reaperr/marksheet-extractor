@@ -22,55 +22,61 @@ def get_extraction_prompt():
 
     Return ONLY valid JSON.
 
-    Required fields:
+    Required schema:
 
-    candidate_details:
-    - name
-    - father_name
-    - mother_name
-    - roll_no
-    - registration_no
-    - dob
-
-    Other fields:
-    - board_university
-    - institution
-    - exam_year
-    - overall_result
-    - overall_grade
-    - division
-    - issue_date
-    - issue_place
-
-    subjects:
-    - subject
-    - max_marks_or_credits
-    - obtained_marks_or_credits
-    - grade
-
-    Every field must have:
     {
-      "value": "...",
-      "confidence": 0.0
+      "candidate_details": {
+        "name": {"value":"","confidence":0},
+        "father_name": {"value":"","confidence":0},
+        "mother_name": {"value":"","confidence":0},
+        "roll_no": {"value":"","confidence":0},
+        "registration_no": {"value":"","confidence":0},
+        "dob": {"value":"","confidence":0},
+        "exam_year": {"value":"","confidence":0},
+        "board_university": {"value":"","confidence":0},
+        "institution": {"value":"","confidence":0}
+      },
+
+      "subjects": [
+        {
+          "subject": {"value":"","confidence":0},
+          "max_marks_or_credits": {"value":"","confidence":0},
+          "obtained_marks_or_credits": {"value":"","confidence":0},
+          "grade": {"value":"","confidence":0}
+        }
+      ],
+
+      "overall_result": {"value":"","confidence":0},
+      "overall_grade": {"value":"","confidence":0},
+      "division": {"value":"","confidence":0},
+
+      "issue_date": {"value":"","confidence":0},
+      "issue_place": {"value":"","confidence":0}
     }
 
-    Confidence must be between 0 and 1.
-
-    Return valid JSON only.
+    Rules:
+    - Every field must contain value and confidence.
+    - Confidence must be between 0 and 1.
+    - If a field is missing:
+      {"value": null, "confidence": 0.0}
+    - Never assign confidence above 0.2 when value is null.
+    - Return JSON only.
     """
-
+    
 
 def extract_marksheet_from_image(image_bytes):
-    prompt = get_extraction_prompt()
-
     image = Image.open(io.BytesIO(image_bytes))
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",
-        contents=[prompt, image]
+        contents=[get_extraction_prompt(), image]
     )
 
-    cleaned = response.text.replace("```json", "").replace("```", "").strip()
+    cleaned = response.text.replace(
+        "```json", ""
+    ).replace(
+        "```", ""
+    ).strip()
 
     try:
         return json.loads(cleaned)
