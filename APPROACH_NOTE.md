@@ -167,6 +167,8 @@ FastAPI supports asynchronous request handling.
 
 This enables multiple concurrent extraction requests and improves responsiveness under load.
 
+FastAPI's asynchronous architecture allows multiple extraction requests to be processed concurrently without blocking the application, making the API suitable for real-world usage and future scaling.
+
 ---
 
 ## Conclusion
