@@ -51,38 +51,49 @@ async def extract_marksheet(
     file: UploadFile = File(...),
     _: bool = Depends(verify_token)
 ):
-    allowed_types = (
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".pdf"
-    )
+    try:
 
-    if not file.filename.lower().endswith(allowed_types):
-        raise HTTPException(
-            status_code=400,
-            detail="Only JPG, JPEG, PNG and PDF files are allowed"
+        allowed_types = (
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".pdf"
         )
 
-    file_bytes = await file.read()
+        if not file.filename.lower().endswith(allowed_types):
+            raise HTTPException(
+                status_code=400,
+                detail="Only JPG, JPEG, PNG and PDF files are allowed"
+            )
 
-    if len(file_bytes) > 10 * 1024 * 1024:
-        raise HTTPException(
-            status_code=400,
-            detail="File size exceeds 10 MB"
+        file_bytes = await file.read()
+
+        if len(file_bytes) > 10 * 1024 * 1024:
+            raise HTTPException(
+                status_code=400,
+                detail="File size exceeds 10 MB"
+            )
+
+        pages = process_file(
+            file_bytes,
+            file.filename
         )
 
-    pages = process_file(
-        file_bytes,
-        file.filename
-    )
+        result = extract_marksheet_from_image(
+            pages[0]
+        )
 
-    result = extract_marksheet_from_image(
-        pages[0]
-    )
+        return {
+            "filename": file.filename,
+            "pages_processed": len(pages),
+            "extracted_data": result
+        }
 
-    return {
-        "filename": file.filename,
-        "pages_processed": len(pages),
-        "extracted_data": result
-    }
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

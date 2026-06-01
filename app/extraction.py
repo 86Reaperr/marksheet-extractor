@@ -2,6 +2,8 @@ from google import genai
 from app.config import settings
 
 from PIL import Image
+from fastapi import HTTPException
+
 import io
 import json
 
@@ -65,22 +67,44 @@ def get_extraction_prompt():
     
 
 def extract_marksheet_from_image(image_bytes):
-    image = Image.open(io.BytesIO(image_bytes))
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[get_extraction_prompt(), image]
+    try:
+        image = Image.open(io.BytesIO(image_bytes))
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or corrupted image file"
+        )
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                get_extraction_prompt(),
+                image
+            ]
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Gemini API Error: {str(e)}"
+        )
+
+    cleaned = (
+        response.text
+        .replace("```json", "")
+        .replace("```", "")
+        .strip()
     )
-
-    cleaned = response.text.replace(
-        "```json", ""
-    ).replace(
-        "```", ""
-    ).strip()
 
     try:
         return json.loads(cleaned)
-    except Exception:
-        return {
-            "raw_response": response.text
-        }
+
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Gemini returned invalid JSON",
+                "raw_response": response.text
+            }
+        )

@@ -16,7 +16,7 @@ def process_file(file_bytes: bytes, filename: str):
         images = []
 
         for page in pdf:
-            pix = page.get_pixmap()
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
 
             img_array = np.frombuffer(
                 pix.samples,
